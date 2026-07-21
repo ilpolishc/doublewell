@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doublewell"
+version = "0.1.0"
+description = "Reproduction of the wide double-well superposition protocol (PRL 132, 023601) and its statistical certification (arXiv:2506.22092)"
+requires-python = ">=3.11"
+dependencies = ["numpy", "scipy", "matplotlib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
