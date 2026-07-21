@@ -4,6 +4,9 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from doublewell.units import ParamSet
+from doublewell.classical import comoving_frame
+
 
 @dataclass(frozen=True)
 class Grid1D:
@@ -77,3 +80,30 @@ def propagate(psi: np.ndarray, grid: Grid1D, v: np.ndarray, dtau: float,
                 step % callback_every == 0 or step == nsteps):
             callback(psi, step)
     return psi
+
+
+def residual_potential(params: ParamSet, xi: np.ndarray, xi_c: float) -> np.ndarray:
+    r2 = params.omega_over_Omega ** 2
+    a = -0.25 * r2
+    b = 0.125 * r2 / params.D_over_XOm ** 2
+    return (a + 6.0 * b * xi_c ** 2) * xi ** 2 + 4.0 * b * xi_c * xi ** 3 + b * xi ** 4
+
+
+def propagate_comoving(phi: np.ndarray, grid: Grid1D, params: ParamSet,
+                       tau_end: float, nsteps: int, callback=None,
+                       callback_every: int = 0) -> np.ndarray:
+    dtau = tau_end / nsteps
+    tau_mid = (np.arange(nsteps) + 0.5) * dtau
+    xi_c_mid, _ = comoving_frame(params, tau_mid)
+    drift = np.exp(-1j * grid.k ** 2 * dtau)
+    phi = phi.astype(np.complex128, copy=True)
+    for step in range(1, nsteps + 1):
+        half_kick = np.exp(-0.5j * residual_potential(params, grid.xi,
+                                                       xi_c_mid[step - 1]) * dtau)
+        phi *= half_kick
+        phi = np.fft.ifft(drift * np.fft.fft(phi))
+        phi *= half_kick
+        if callback is not None and callback_every and (
+                step % callback_every == 0 or step == nsteps):
+            callback(phi, step)
+    return phi

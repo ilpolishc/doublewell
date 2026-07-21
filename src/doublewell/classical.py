@@ -1,18 +1,3 @@
-"""Classical layer (guide Stage 1.1).
-
-Units: u = X/D, tau_w = omega*t  (NB: omega-time, not the Omega-time of the
-quantum solver; conversion tau_w = (omega/Omega) * tau).  Newton's equation
-for the double well V(X) = (m omega^2/2)(-X^2 + X^4/2D^2):
-
-    u'' = u - u^3
-
-Conserved energy e = u'^2/2 + U(u) with U(u) = -u^2/2 + u^4/4.
-
-This layer is triply load-bearing (guide 1.1): it validates the potential and
-units, it defines the co-moving frame for the quantum solver, and as a thermal
-Monte Carlo it *is* the classical hypothesis H0 of Stage 4.
-"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -68,6 +53,16 @@ def thermal_initial_conditions(params: ParamSet, n_traj: int,
     u0 = params.xs_over_D + pos_std * rng.standard_normal(n_traj)
     v0 = vel_std * rng.standard_normal(n_traj)
     return u0, v0
+
+
+def comoving_frame(params: ParamSet, tau):
+    tau = np.atleast_1d(np.asarray(tau, dtype=float))
+    tau_w = params.omega_over_Omega * tau
+    sol = trajectory(params.xs_over_D, tau_max=float(tau_w.max()) * 1.001 + 1e-6)
+    u, up = sol.sol(tau_w)
+    xi_c = params.D_over_XOm * u
+    k_c = 0.5 * params.D_over_XOm * params.omega_over_Omega * up
+    return xi_c, k_c
 
 
 def evolve_ensemble(u0: np.ndarray, v0: np.ndarray, tau_end: float,

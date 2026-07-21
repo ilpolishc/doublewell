@@ -21,7 +21,6 @@ def test_toy_s_is_actually_small():
 
 
 def test_double_well_shape():
-    # Minima of v_dw at xi = +-D/X_Om with depth -(1/8)(w/W)^2 (D/X_Om)^2
     xi_min = TOY_S.D_over_XOm
     depth = -0.125 * TOY_S.omega_over_Omega ** 2 * TOY_S.D_over_XOm ** 2
     assert TOY_S.v_dw(np.array([xi_min]))[0] == pytest.approx(depth)

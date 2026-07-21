@@ -7,7 +7,7 @@ from doublewell.classical import (
     thermal_initial_conditions, evolve_ensemble,
 )
 
-U0 = 0.1  # X_s/D for both L and toy-S
+U0 = 0.1
 
 
 def test_turning_point_value():
@@ -19,7 +19,6 @@ def test_half_period_ode_vs_quadrature_vs_paper():
     tau_half_ode = sol.t_events[0][0]
     tau_half_int = half_period_quad(U0)
     assert tau_half_ode == pytest.approx(tau_half_int, rel=1e-6)
-    # paper's asymptotic formula, good to ~1% at u0 = 0.1
     assert tau_half_ode == pytest.approx(L.omega_tm, rel=0.02)
 
 
@@ -28,7 +27,6 @@ def test_trajectory_reaches_turning_point_and_returns():
     tau_half = sol.t_events[0][0]
     u_at_turn = sol.sol(tau_half)[0]
     assert u_at_turn == pytest.approx(turning_point(U0), abs=1e-6)
-    # full orbit: back at u0 with zero velocity at 2 * tau_half
     u_back, v_back = sol.sol(2.0 * tau_half)
     assert u_back == pytest.approx(U0, abs=1e-5)
     assert v_back == pytest.approx(0.0, abs=1e-5)
@@ -54,7 +52,6 @@ def test_ensemble_rk4_matches_rk45():
 def test_thermal_ensemble_stats():
     rng = np.random.default_rng(1)
     u0, v0 = thermal_initial_conditions(L, 200_000, rng)
-    # L set, nbar = 0: std(u) = 1e-4, std(u') = 1e-2, mean u = 0.1
     assert np.mean(u0) == pytest.approx(0.1, abs=1e-6)
     assert np.std(u0) == pytest.approx(1e-4, rel=0.02)
     assert np.std(v0) == pytest.approx(1e-2, rel=0.02)
