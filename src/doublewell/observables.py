@@ -59,7 +59,7 @@ def evolve_covariance(c2, tau_grid, sigma0=(1.0, 0.0, 1.0)):
     return sol.y[0], sol.y[1], sol.y[2]
 
 
-def squeezing_quadratic(params, tau_grid, nbar=0.0):
+def covariance_quadratic(params, tau_grid, nbar=0.0):
     a = -0.25 * params.omega_over_Omega ** 2
     b = 0.125 * params.omega_over_Omega ** 2 / params.D_over_XOm ** 2
     tau_grid = np.asarray(tau_grid, dtype=float)
@@ -71,7 +71,11 @@ def squeezing_quadratic(params, tau_grid, nbar=0.0):
         return a + 6.0 * b * (params.D_over_XOm * u) ** 2
 
     s = 2.0 * nbar + 1.0
-    Sxx, Sxp, Spp = evolve_covariance(c2, tau_grid, sigma0=(s, 0.0, s))
+    return evolve_covariance(c2, tau_grid, sigma0=(s, 0.0, s))
+
+
+def squeezing_quadratic(params, tau_grid, nbar=0.0):
+    Sxx, Sxp, Spp = covariance_quadratic(params, tau_grid, nbar)
     tr = Sxx + Spp
     disc = np.sqrt((Sxx - Spp) ** 2 + 4.0 * Sxp ** 2)
     return 0.5 * (tr - disc), 0.5 * (tr + disc)
