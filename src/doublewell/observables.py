@@ -79,3 +79,24 @@ def squeezing_quadratic(params, tau_grid, nbar=0.0):
     tr = Sxx + Spp
     disc = np.sqrt((Sxx - Spp) ** 2 + 4.0 * Sxp ** 2)
     return 0.5 * (tr - disc), 0.5 * (tr + disc)
+
+def momentum_std_max(params, n_tau=4000):
+    tau = np.linspace(0.0, 2.0 * params.tau_m, n_tau)
+    Spp = covariance_quadratic(params, tau)[2]
+    return float(np.sqrt(Spp).max())
+
+
+def required_n(params, half_width, headroom=4.0):
+    n_min = headroom * momentum_std_max(params) * half_width / np.pi
+    return int(2 ** int(np.ceil(np.log2(n_min))))
+
+
+def check_resolution(params, n, half_width, headroom=4.0):
+    pi_max = np.pi * n / half_width               # = 2 pi / dxi, dxi = 2 half_width / n
+    need = headroom * momentum_std_max(params)
+    if pi_max < need:
+        raise ValueError(
+            f"{params.name}: momentum Nyquist pi_max={pi_max:.1f} P_Om < {headroom}x "
+            f"Delta_pi_max={need:.1f}; need n>={required_n(params, half_width, headroom)} "
+            f"at half_width={half_width} (have n={n}).")
+    return pi_max, need

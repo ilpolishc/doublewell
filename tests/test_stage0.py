@@ -41,9 +41,7 @@ def test_ground_state_variance(grid):
     psi = gaussian_state(grid)
     assert norm(psi, grid) == pytest.approx(1.0, abs=1e-12)
     assert var_xi(psi, grid) == pytest.approx(1.0, abs=1e-10)
-    # <(P/P_Om)^2> = 4 <k^2> = 1 for the ground state (zero-point momentum)
     assert 4.0 * expect_k(psi, grid, power=2) == pytest.approx(1.0, abs=1e-8)
-    # ground-state energy of v = xi^2/4 is 1/2 (in hbar*Omega units)
     assert energy(psi, grid, v_prep(grid.xi)) == pytest.approx(0.5, abs=1e-8)
 
 

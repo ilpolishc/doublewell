@@ -29,8 +29,13 @@ class ParamSet:
         return 20.0 * math.log10(self.eta)
 
     @property
-    def omega_tm(self) -> float:
+    def omega_tm_asymptotic(self) -> float:
         return math.log(4.0 * SQRT2 / self.xs_over_D)
+
+    @property
+    def omega_tm(self) -> float:
+        from doublewell.classical import half_period_quad
+        return half_period_quad(self.xs_over_D)
 
     @property
     def tau_m(self) -> float:
@@ -51,5 +56,5 @@ def v_prep(xi: np.ndarray) -> np.ndarray:
 
 L = ParamSet(name="L", xs_over_D=0.1, omega_over_Omega=1e-2, D_over_XOm=1e4)
 
-
+TOY_M = ParamSet(name="toy-M", xs_over_D=0.1, omega_over_Omega=0.1, D_over_XOm=1000.0)
 TOY_S = ParamSet(name="toy-S", xs_over_D=0.1, omega_over_Omega=0.1, D_over_XOm=100.0)
