@@ -19,7 +19,8 @@ def test_half_period_ode_vs_quadrature_vs_paper():
     tau_half_ode = sol.t_events[0][0]
     tau_half_int = half_period_quad(U0)
     assert tau_half_ode == pytest.approx(tau_half_int, rel=1e-6)
-    assert tau_half_ode == pytest.approx(L.omega_tm, rel=0.02)
+    assert tau_half_ode == pytest.approx(L.omega_tm, rel=1e-5)
+    assert tau_half_ode == pytest.approx(L.omega_tm_asymptotic, rel=0.02)
 
 
 def test_trajectory_reaches_turning_point_and_returns():

@@ -10,14 +10,15 @@ from doublewell.splitstep import (
 def test_L_set_derived_quantities_match_paper():
     assert L.eta == pytest.approx(707.1068, rel=1e-4)
     assert L.S0_dB == pytest.approx(56.99, abs=0.01)
-    assert L.omega_tm == pytest.approx(4.0356, abs=1e-3)
+    assert L.omega_tm_asymptotic == pytest.approx(4.0355, abs=1e-3)
+    assert L.omega_tm == pytest.approx(4.0469, abs=1e-3)
     assert L.xi_s == pytest.approx(1000.0)
-    assert L.tau_m == pytest.approx(403.56, abs=0.1)
+    assert L.tau_m == pytest.approx(404.69, abs=0.1)
 
 
 def test_toy_s_is_actually_small():
     assert TOY_S.xi_s == pytest.approx(10.0)
-    assert TOY_S.tau_m == pytest.approx(40.356, abs=0.01)
+    assert TOY_S.tau_m == pytest.approx(40.469, abs=0.01)
 
 
 def test_double_well_shape():
