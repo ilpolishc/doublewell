@@ -55,6 +55,18 @@ def thermal_initial_conditions(params: ParamSet, n_traj: int,
     return u0, v0
 
 
+def displacement_initial_conditions(params: ParamSet, n_traj: int,
+                                    rng: np.random.Generator, nbar: float = 0.0,
+                                    sigma_s_over_XOm: float = 0.0):
+
+    s = np.sqrt(2.0 * nbar)
+    dxi0 = np.hypot(s, sigma_s_over_XOm) * rng.standard_normal(n_traj)
+    dpi0 = s * rng.standard_normal(n_traj)
+    u0 = params.xs_over_D + dxi0 / params.D_over_XOm
+    v0 = dpi0 / (params.D_over_XOm * params.omega_over_Omega)
+    return dxi0, dpi0, u0, v0
+
+
 def comoving_frame(params: ParamSet, tau):
     tau = np.atleast_1d(np.asarray(tau, dtype=float))
     tau_w = params.omega_over_Omega * tau

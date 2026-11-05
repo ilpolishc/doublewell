@@ -59,26 +59,48 @@ def evolve_covariance(c2, tau_grid, sigma0=(1.0, 0.0, 1.0)):
     return sol.y[0], sol.y[1], sol.y[2]
 
 
-def covariance_quadratic(params, tau_grid, nbar=0.0):
+def c2_along_orbit(params, tau_max):
+
     a = -0.25 * params.omega_over_Omega ** 2
     b = 0.125 * params.omega_over_Omega ** 2 / params.D_over_XOm ** 2
-    tau_grid = np.asarray(tau_grid, dtype=float)
-    tw_max = params.omega_over_Omega * tau_grid[-1] * 1.001 + 1e-6
-    sol = trajectory(params.xs_over_D, tau_max=tw_max)
+    sol = trajectory(params.xs_over_D,
+                     tau_max=params.omega_over_Omega * tau_max * 1.001 + 1e-6)
 
     def c2(tau):
         u = sol.sol(params.omega_over_Omega * tau)[0]
         return a + 6.0 * b * (params.D_over_XOm * u) ** 2
 
+    return c2
+
+
+def transfer_matrix(params, tau_end, n_tau=8000):
+
+    c2 = c2_along_orbit(params, tau_end)
+
+    def rhs(tau, y):                                  # y = [M11, M12, M21, M22]
+        c = c2(tau)
+        return [y[2], y[3], -4.0 * c * y[0], -4.0 * c * y[1]]
+
+    tau = np.linspace(0.0, tau_end, n_tau)
+    y = solve_ivp(rhs, (0.0, tau_end), [1.0, 0.0, 0.0, 1.0], t_eval=tau,
+                  rtol=1e-9, atol=1e-12).y
+    return tau, y.T.reshape(-1, 2, 2)
+
+
+def covariance_quadratic(params, tau_grid, nbar=0.0):
+    tau_grid = np.asarray(tau_grid, dtype=float)
+    c2 = c2_along_orbit(params, tau_grid[-1])
     s = 2.0 * nbar + 1.0
     return evolve_covariance(c2, tau_grid, sigma0=(s, 0.0, s))
 
 
 def squeezing_quadratic(params, tau_grid, nbar=0.0):
+
     Sxx, Sxp, Spp = covariance_quadratic(params, tau_grid, nbar)
     tr = Sxx + Spp
     disc = np.sqrt((Sxx - Spp) ** 2 + 4.0 * Sxp ** 2)
-    return 0.5 * (tr - disc), 0.5 * (tr + disc)
+    lam_p = 0.5 * (tr + disc)
+    return 1.0 / lam_p, lam_p
 
 def momentum_std_max(params, n_tau=4000):
     tau = np.linspace(0.0, 2.0 * params.tau_m, n_tau)
@@ -100,3 +122,19 @@ def check_resolution(params, n, half_width, headroom=4.0):
             f"Delta_pi_max={need:.1f}; need n>={required_n(params, half_width, headroom)} "
             f"at half_width={half_width} (have n={n}).")
     return pi_max, need
+def cumulants(psi, grid):
+
+    p = np.abs(psi) ** 2
+    p = p / p.sum()
+    xi = grid.xi
+    m1 = float((xi * p).sum())
+    dx = xi - m1
+    return m1, float((dx ** 2 * p).sum()), float((dx ** 3 * p).sum())
+
+
+def cubic_phase_thetas(m1, m2, m3):
+
+    th1 = -m1
+    th2 = m2 - 2.0 * th1 ** 2
+    th3 = 0.5 * (m3 + 8.0 * th1 ** 3)
+    return th1, th2, th3

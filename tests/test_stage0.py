@@ -7,6 +7,20 @@ from doublewell.splitstep import (
 )
 
 
+def test_table_I_rows_match_paper():
+
+    from doublewell.units import ParamSet
+    rows = [("XXL", 1e-1, 1e-4, 1e8, 1e5, 97),
+            ("XL",  1e-1, 1e-3, 1e6, 1e4, 77),
+            ("L",   1e-1, 1e-2, 1e4, 1e3, 57)]
+    for name, xs, w, D, sqrt2_eta, S0 in rows:
+        p = ParamSet(name, xs_over_D=xs, omega_over_Omega=w, D_over_XOm=D)
+        assert np.sqrt(2.0) * p.eta == pytest.approx(sqrt2_eta, rel=1e-9)
+        assert p.S0_dB == pytest.approx(S0, abs=0.02)
+        assert p.eta == pytest.approx((1 / np.sqrt(2)) * (1 / w) * (1 / xs), rel=1e-12)
+        assert ((1 / w) ** 2 / D) ** (1 / 3) == pytest.approx(1.0, rel=1e-9)
+
+
 def test_L_set_derived_quantities_match_paper():
     assert L.eta == pytest.approx(707.1068, rel=1e-4)
     assert L.S0_dB == pytest.approx(56.99, abs=0.01)
